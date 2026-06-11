@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# assessment brief (kept local, not published)
+challenge-brief.md
+challenge-brief.pdf
