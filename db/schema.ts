@@ -1,11 +1,14 @@
-import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+
+import type { ContentType } from '@/lib/schemas/content'
+import type { ImprovementGoal } from '@/lib/schemas/improve'
+import type { ImageStyle } from '@/lib/schemas/image'
+import type { GenerationResult } from '@/lib/schemas'
 
 /**
  * Better Auth core tables.
  * The email-OTP plugin reuses the `verification` table for one-time codes,
  * so no extra table is needed for OTP.
- *
- * Feature tables (generated content, images, etc.) are added with their PRDs.
  */
 
 export const user = pgTable('user', {
@@ -64,4 +67,70 @@ export const verification = pgTable('verification', {
   updatedAt: timestamp('updated_at').$defaultFn(() => new Date())
 })
 
-export const schema = { user, session, account, verification }
+/**
+ * A saved generation — either AI-generated content (PRD 03) or an AI improvement
+ * (PRD 06). One unified history. `result` holds the structured, type-specific output;
+ * `plainText` is the flattened text for search / copy / download.
+ */
+export const generations = pgTable(
+  'generations',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    source: text('source').$type<'generated' | 'improved'>().default('generated').notNull(),
+    contentType: text('content_type').$type<ContentType | 'improvement'>().notNull(),
+    topic: text('topic'),
+    tone: text('tone'),
+    audience: text('audience'),
+    goal: text('goal').$type<ImprovementGoal>(),
+    result: jsonb('result').$type<GenerationResult>().notNull(),
+    plainText: text('plain_text').notNull(),
+    model: text('model'),
+    createdAt: timestamp('created_at')
+      .$defaultFn(() => new Date())
+      .notNull()
+  },
+  (t) => [index('generations_user_created_idx').on(t.userId, t.createdAt)]
+)
+
+/**
+ * AI images attached to a generation. Each regenerate adds a row, so a generation
+ * keeps its full image history; the newest is shown by default.
+ */
+export const generationImages = pgTable(
+  'generation_images',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    generationId: text('generation_id')
+      .notNull()
+      .references(() => generations.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    style: text('style').$type<ImageStyle>().notNull(),
+    prompt: text('prompt').notNull(),
+    createdAt: timestamp('created_at')
+      .$defaultFn(() => new Date())
+      .notNull()
+  },
+  (t) => [index('generation_images_generation_idx').on(t.generationId)]
+)
+
+export type Generation = typeof generations.$inferSelect
+export type GenerationImage = typeof generationImages.$inferSelect
+
+export const schema = {
+  user,
+  session,
+  account,
+  verification,
+  generations,
+  generationImages
+}

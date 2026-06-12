@@ -18,6 +18,9 @@ export const env = createEnv({
     // OpenAI — powers both text generation/improvement and image generation.
     OPENAI_API_KEY: z.string().min(1),
 
+    // Vercel Blob — stores generated images. Required for image generation at runtime.
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+
     // Resend — delivers the email OTP. Optional in dev (we fall back to console logging).
     RESEND_API_KEY: z.string().min(1).optional(),
     EMAIL_FROM: z.string().min(1).default('AI Marketing Suite <onboarding@resend.dev>'),
@@ -32,6 +35,7 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     NODE_ENV: process.env.NODE_ENV,
