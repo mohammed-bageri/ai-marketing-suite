@@ -15,8 +15,11 @@ export function ProfileForm() {
   const { data } = useSession()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  // `null` = not edited yet → mirror the session value; a string = user is editing.
+  const [draftName, setDraftName] = useState<string | null>(null)
 
   const user = data?.user
+  const name = draftName ?? user?.name ?? ''
   const memberSince = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString(undefined, {
         month: 'long',
@@ -27,9 +30,8 @@ export function ProfileForm() {
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const name = String(new FormData(event.currentTarget).get('name') ?? '').trim()
     setSaving(true)
-    const { error } = await authClient.updateUser({ name })
+    const { error } = await authClient.updateUser({ name: name.trim() })
     setSaving(false)
     if (error) {
       toast.error(error.message ?? 'Could not save')
@@ -52,8 +54,8 @@ export function ProfileForm() {
               <Input
                 id="name"
                 name="name"
-                key={user?.id}
-                defaultValue={user?.name ?? ''}
+                value={name}
+                onChange={(e) => setDraftName(e.target.value)}
                 placeholder="Your name"
               />
             </div>
