@@ -1,4 +1,5 @@
 import { CopyButton } from '@/components/shared/copy-button'
+import { Markdown } from '@/components/shared/markdown'
 import { Badge } from '@/components/ui/badge'
 import type { GenerationResult } from '@/lib/schemas'
 import type {
@@ -25,7 +26,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function Prose({ value }: { value: string }) {
-  return <div className="text-sm leading-relaxed whitespace-pre-wrap">{value}</div>
+  return <Markdown>{value}</Markdown>
 }
 
 export function ContentView({
