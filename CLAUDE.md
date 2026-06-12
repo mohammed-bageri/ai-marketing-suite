@@ -22,7 +22,7 @@ All AI calls are **server-side only**. The frontend never talks to OpenAI direct
 
 - **Next.js 16 (App Router)** + **React 19** + **TypeScript** — full-stack, deployed on Vercel.
 - **Hono** — single API app mounted at `app/api/[[...route]]/route.ts`; exposes REST + typed RPC.
-- **Drizzle ORM** + **Neon Postgres** — `drizzle-orm/neon-http` driver (serverless-friendly).
+- **Drizzle ORM** + **Postgres** — postgres.js driver (local Docker via `docker-compose.yml`, or Neon in prod).
 - **Better Auth** — passwordless **email OTP** login.
 - **Zod** — validation, shared between Hono validators and forms.
 - **@t3-oss/env-nextjs** — startup-validated env vars (`lib/env.ts`).

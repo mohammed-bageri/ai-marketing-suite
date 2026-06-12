@@ -20,9 +20,10 @@ content's topic, tone, type, and body so the frontend just clicks "generate imag
 post, LinkedIn post, ad copy, email) has its own system prompt, structure, and constraints, selected
 server-side from the request — this is where most of the output-quality score lives.
 
-**Serverless-first persistence.** Neon Postgres with Drizzle's `neon-http` driver avoids holding TCP
-pools open in short-lived Vercel functions. Drizzle keeps schema, migrations, and queries type-safe
-and close to SQL.
+**Portable persistence.** Postgres via Drizzle + postgres.js, configured with `max: 1` and
+`prepare: false` so the same code runs against a local Docker Postgres in development and Neon in
+production (using its pooled connection string). Drizzle keeps schema, migrations, and queries
+type-safe and close to SQL.
 
 **Passwordless auth.** Better Auth with email OTP — no password storage, fast to use in a demo, and
 production-reasonable. Resend delivers codes, with a console fallback so the flow works locally

@@ -21,9 +21,14 @@ export const env = createEnv({
     // Vercel Blob — stores generated images. Required for image generation at runtime.
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 
-    // Resend — delivers the email OTP. Optional in dev (we fall back to console logging).
+    // Email transport. SMTP wins if set (local Mailpit or any free provider);
+    // otherwise Resend; otherwise the OTP is logged to the server console.
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().min(1).default('AI Marketing Suite <onboarding@resend.dev>'),
+    EMAIL_FROM: z.string().min(1).default('AI Marketing Suite <noreply@localhost>'),
 
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development')
   },
@@ -36,6 +41,10 @@ export const env = createEnv({
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASS: process.env.SMTP_PASS,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     NODE_ENV: process.env.NODE_ENV,

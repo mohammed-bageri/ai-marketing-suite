@@ -21,10 +21,10 @@ are in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 | API layer      | Hono (REST + end-to-end typed RPC), mounted in a Next route handler |
 | Validation     | Zod                                                             |
 | Env safety     | `@t3-oss/env-nextjs` (validated at startup)                     |
-| Database / ORM | Neon Postgres + Drizzle ORM (`neon-http` driver)                |
+| Database / ORM | Postgres + Drizzle ORM (postgres.js — local Docker or Neon)      |
 | Auth           | Better Auth — passwordless email OTP                            |
 | AI             | OpenAI — text generation/improvement + image generation         |
-| Email          | Resend (dev console fallback)                                   |
+| Email          | SMTP (nodemailer) → Resend → console fallback; Mailpit for local |
 | UI             | Tailwind v4 + shadcn/ui, TanStack Query/Table, react-hook-form, sonner |
 
 ## Getting started
@@ -32,39 +32,56 @@ are in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 ### Prerequisites
 
 - Node.js 20+ and npm
-- A Neon Postgres database ([neon.tech](https://neon.tech))
+- Docker (for local Postgres + email), or a Neon database for cloud Postgres
 - An OpenAI API key
-- (Optional) A Resend API key — without it, login codes are logged to the server console
 
-### Setup
+### Local setup (Docker)
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Configure environment
+# 2. Start Postgres + Mailpit (local SMTP catcher)
+docker compose up -d
+
+# 3. Configure environment — the defaults already match docker-compose
 cp .env.example .env.local
-#   then fill in DATABASE_URL, OPENAI_API_KEY, BETTER_AUTH_SECRET, etc.
-#   generate a secret: openssl rand -base64 32
+#   set OPENAI_API_KEY, generate BETTER_AUTH_SECRET (openssl rand -base64 32),
+#   and BLOB_READ_WRITE_TOKEN if you want image generation.
 
-# 3. Create the database schema
-npm run db:push        # or: npm run db:generate && npm run db:migrate
+# 4. Create the database schema
+npm run db:push        # or: npm run db:migrate
 
-# 4. Run
+# 5. Run
 npm run dev            # http://localhost:3000
 ```
 
+Login codes are captured by Mailpit — open **http://localhost:8025** to read them (no real
+email account needed). Tear down with `docker compose down` (add `-v` to wipe the database).
+
+### Deploying (Vercel + Neon)
+
+Set `DATABASE_URL` to a Neon connection string and configure a real email transport (any free
+SMTP such as Brevo/Gmail via `SMTP_*`, or `RESEND_API_KEY`). Set `BLOB_READ_WRITE_TOKEN` from a
+Vercel Blob store. Point `BETTER_AUTH_URL` / `NEXT_PUBLIC_APP_URL` at the deployed origin.
+
 ### Environment variables
 
-| Variable               | Required | Description                                              |
-| ---------------------- | -------- | -------------------------------------------------------- |
-| `DATABASE_URL`         | yes      | Neon Postgres connection string                          |
-| `BETTER_AUTH_SECRET`   | yes      | Secret for Better Auth (`openssl rand -base64 32`)       |
-| `BETTER_AUTH_URL`      | yes      | Auth base URL (e.g. `http://localhost:3000`)             |
-| `OPENAI_API_KEY`       | yes      | OpenAI key for text + image generation                   |
-| `NEXT_PUBLIC_APP_URL`  | yes      | Public base URL (browser-exposed)                        |
-| `RESEND_API_KEY`       | no       | Resend key; omit in dev to log OTP to the console        |
-| `EMAIL_FROM`           | no       | From address for OTP emails                              |
+| Variable                  | Required | Description                                                     |
+| ------------------------- | -------- | --------------------------------------------------------------- |
+| `DATABASE_URL`            | yes      | Postgres connection string (local Docker or Neon)               |
+| `BETTER_AUTH_SECRET`      | yes      | Secret for Better Auth (`openssl rand -base64 32`)              |
+| `BETTER_AUTH_URL`         | yes      | Auth base URL (e.g. `http://localhost:3000`)                    |
+| `OPENAI_API_KEY`          | yes      | OpenAI key for text + image generation                          |
+| `NEXT_PUBLIC_APP_URL`     | yes      | Public base URL (browser-exposed)                               |
+| `BLOB_READ_WRITE_TOKEN`   | images   | Vercel Blob RW token; required for image generation             |
+| `SMTP_HOST` / `SMTP_PORT` | no       | SMTP transport (local: `localhost` / `1025` → Mailpit)          |
+| `SMTP_USER` / `SMTP_PASS` | no       | SMTP credentials (omit for Mailpit)                             |
+| `RESEND_API_KEY`          | no       | Resend key; used if SMTP is not set                             |
+| `EMAIL_FROM`              | no       | From address for OTP emails                                     |
+
+> Email resolves in order: **SMTP → Resend → console log**. With none set, OTPs print to the
+> server console.
 
 ## API
 
