@@ -109,3 +109,19 @@ export async function deleteGeneration(userId: string, id: string) {
   await db.delete(generations).where(and(eq(generations.id, id), eq(generations.userId, userId)))
   return true
 }
+
+/** Best-effort removal of all of a user's Blob images (used before account deletion). */
+export async function deleteUserImages(userId: string) {
+  if (!blobConfigured) return
+  const rows = await db
+    .select({ url: generationImages.url })
+    .from(generationImages)
+    .where(eq(generationImages.userId, userId))
+  const urls = rows.map((r) => r.url)
+  if (!urls.length) return
+  try {
+    await del(urls, blobTokenOption)
+  } catch (error) {
+    console.error('[generations] failed to delete user blob assets:', error)
+  }
+}

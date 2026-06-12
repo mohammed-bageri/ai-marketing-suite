@@ -7,6 +7,7 @@ import { notFound } from '@/server/lib/errors'
 import { paginated, paginationQuerySchema } from '@/server/lib/pagination'
 import { validate } from '@/server/lib/validate'
 import { requireAuth, type AuthVariables } from '@/server/middleware/auth'
+import { rateLimit } from '@/server/middleware/rate-limit'
 import { generateGenerationImage } from '@/server/services/image/generate'
 import {
   deleteGeneration,
@@ -57,6 +58,7 @@ export const generationsRouter = new Hono<{ Variables: AuthVariables }>()
   // Generate / regenerate an image (server builds the prompt).
   .post(
     '/:id/images',
+    rateLimit({ name: 'image', limit: 10, windowMs: 60_000 }),
     validate('param', idParam),
     validate('json', createImageSchema),
     async (c) => {

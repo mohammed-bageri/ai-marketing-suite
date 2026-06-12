@@ -14,10 +14,16 @@ import { authClient } from '@/lib/auth-client'
 
 const emailSchema = z.string().email('Enter a valid email')
 
+/** Only allow same-site relative paths — blocks open-redirect to external URLs. */
+function safeRedirect(value: string | null): string {
+  if (value && value.startsWith('/') && !value.startsWith('//')) return value
+  return '/dashboard'
+}
+
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const redirectTo = params.get('redirect') || '/dashboard'
+  const redirectTo = safeRedirect(params.get('redirect'))
 
   const [step, setStep] = useState<'email' | 'otp'>('email')
   const [email, setEmail] = useState('')
