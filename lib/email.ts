@@ -36,7 +36,13 @@ export async function sendOtpEmail({ email, otp, type }: OtpEmailArgs) {
   }
 
   if (resend) {
-    await resend.emails.send({ from: env.EMAIL_FROM, to: email, subject, text })
+    // The Resend SDK does NOT throw on API errors — it returns { data, error }.
+    // We must inspect `error` and throw, or failures look like successes.
+    const { error } = await resend.emails.send({ from: env.EMAIL_FROM, to: email, subject, text })
+    if (error) {
+      console.error('[email] Resend rejected the send:', error)
+      throw new Error(error.message || 'Email provider rejected the message')
+    }
     return
   }
 
