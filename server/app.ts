@@ -6,6 +6,7 @@ import type { AuthVariables } from '@/server/middleware/auth'
 import { contentRouter } from '@/server/routes/content'
 import { generationsRouter } from '@/server/routes/generations'
 import { improveRouter } from '@/server/routes/improve'
+import { statsRouter } from '@/server/routes/stats'
 
 /**
  * Single Hono application mounted under /api via the Next.js catch-all route.
@@ -26,6 +27,7 @@ const routes = app
   .route('/content', contentRouter)
   .route('/generations', generationsRouter)
   .route('/improve', improveRouter)
+  .route('/stats', statsRouter)
 
 export { app }
 export type AppType = typeof routes

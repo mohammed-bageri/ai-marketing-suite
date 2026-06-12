@@ -50,3 +50,10 @@ export type Paginated<T> = {
   total: number
   totalPages: number
 }
+
+export type StatsDTO = {
+  totalGenerations: number
+  totalImages: number
+  thisWeek: number
+  byType: { contentType: ContentType | 'improvement'; count: number }[]
+}

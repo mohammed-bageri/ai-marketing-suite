@@ -47,7 +47,13 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6">
-        <section className="flex flex-col items-center py-20 text-center sm:py-28">
+        <section className="relative flex flex-col items-center py-20 text-center sm:py-28">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:44px_44px] opacity-60" />
+          </div>
           <div className="bg-muted/50 text-muted-foreground mb-6 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium">
             <span className="bg-foreground size-1.5 rounded-full" />
             AI content, end to end

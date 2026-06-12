@@ -15,6 +15,10 @@ export const auth = betterAuth({
     provider: 'pg',
     schema
   }),
+  user: {
+    // Allow self-service account deletion (cascades generations + images via FKs).
+    deleteUser: { enabled: true }
+  },
   plugins: [
     // Passwordless email login: users receive a one-time code instead of a password.
     emailOTP({
