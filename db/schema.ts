@@ -13,7 +13,7 @@ import type { GenerationResult } from '@/lib/schemas'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
-  name: text('name').notNull(),
+  name: text('name').notNull().default(''),
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified')
     .$defaultFn(() => false)

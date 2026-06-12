@@ -10,8 +10,8 @@ marketing content with AI. Built for the Magna Labs technical assessment.
 
 All AI runs **server-side**; the browser never calls OpenAI directly.
 
-> **Status:** repository scaffold + foundations. Feature endpoints are implemented per the PRDs in
-> [`docs/PRD/`](docs/PRD) and documented in the [API](#api) section as they land.
+Feature design and scope live in the PRDs under [`docs/PRD/`](docs/PRD); engineering conventions
+are in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 
 ## Tech stack
 
@@ -98,8 +98,143 @@ Handled by Better Auth (email OTP sign-in, session, sign-out). Key calls:
 - `GET  /api/auth/get-session`
 - `POST /api/auth/sign-out`
 
-> Feature endpoints — `POST /api/content` (generate), `POST /api/images` (generate/regenerate),
-> `POST /api/improve`, and `GET/DELETE /api/history` — are documented here as each PRD is implemented.
+### Feature endpoints
+
+All require a valid session. Errors use the standard envelope and the status codes above.
+
+#### `POST /api/content`
+
+Generate marketing content with a per-type prompt strategy, and save it.
+
+**Request**
+
+```json
+{
+  "contentType": "linkedin",
+  "topic": "Launching our AI analytics beta",
+  "tone": "bold",
+  "audience": "B2B SaaS founders"
+}
+```
+
+`contentType`: `blog | linkedin | ad | email` · `tone`: `professional | casual | witty | bold | friendly | authoritative`
+
+**Response** `201` — the saved generation. `result` is structured per content type.
+
+```json
+{
+  "id": "9f0c…",
+  "source": "generated",
+  "contentType": "linkedin",
+  "topic": "Launching our AI analytics beta",
+  "tone": "bold",
+  "audience": "B2B SaaS founders",
+  "result": { "body": "Most dashboards lie…", "hashtags": ["#AI", "#SaaS"] },
+  "plainText": "Most dashboards lie…\n\n#AI #SaaS",
+  "model": "gpt-4o",
+  "createdAt": "2026-06-12T10:00:00.000Z"
+}
+```
+
+#### `POST /api/improve`
+
+Improve text toward a goal; returns the improved text + a summary of changes (saved to history).
+
+**Request**
+
+```json
+{ "text": "we make software for teams", "goal": "persuasive" }
+```
+
+`goal`: `shorter | persuasive | formal | seo | rewrite_audience` (`audience` required when `rewrite_audience`).
+
+**Response** `201`
+
+```json
+{
+  "id": "1a2b…",
+  "source": "improved",
+  "contentType": "improvement",
+  "goal": "persuasive",
+  "result": {
+    "improved": "Ship faster with software built for how teams really work…",
+    "changeSummary": ["Led with the benefit", "Added a clear call to action"]
+  },
+  "plainText": "Ship faster…",
+  "createdAt": "2026-06-12T10:05:00.000Z"
+}
+```
+
+#### `GET /api/generations`
+
+Paginated, owner-scoped history (newest first).
+
+**Query**: `page` (default 1) · `pageSize` (default 12, max 50) · `contentType?` (`blog|linkedin|ad|email|improvement`) · `q?` (topic search)
+
+**Response** `200`
+
+```json
+{
+  "items": [
+    {
+      "id": "9f0c…",
+      "source": "generated",
+      "contentType": "linkedin",
+      "topic": "Launching our AI analytics beta",
+      "tone": "bold",
+      "goal": null,
+      "createdAt": "2026-06-12T10:00:00.000Z",
+      "previewText": "Most dashboards lie…",
+      "imageUrl": "https://…public.blob.vercel-storage.com/…png"
+    }
+  ],
+  "page": 1,
+  "pageSize": 12,
+  "total": 1,
+  "totalPages": 1
+}
+```
+
+#### `GET /api/generations/:id`
+
+One generation with its images (`404` if not found or not owned).
+
+**Response** `200` — the full generation including `result`, `plainText`, and `images: GenerationImage[]`.
+
+#### `DELETE /api/generations/:id`
+
+Delete a generation (cascades image rows and best-effort removes Blob assets).
+
+**Response** `200` → `{ "success": true }`
+
+#### `POST /api/generations/:id/images`
+
+Generate (or regenerate) a matching image. The visual prompt is built **server-side** from the
+generation's topic, tone, type, and text — the client only picks a style.
+
+**Request**
+
+```json
+{ "style": "minimal" }
+```
+
+`style`: `minimal | photographic | 3d_render | illustration | corporate | bold_gradient`
+
+**Response** `201`
+
+```json
+{
+  "id": "img_…",
+  "generationId": "9f0c…",
+  "url": "https://…public.blob.vercel-storage.com/…png",
+  "style": "minimal",
+  "createdAt": "2026-06-12T10:01:00.000Z"
+}
+```
+
+#### `GET /api/generations/:id/images`
+
+List all images for a generation (newest first).
 
 ## Architecture
 
