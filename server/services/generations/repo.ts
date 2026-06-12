@@ -3,9 +3,9 @@ import { and, desc, eq, ilike, inArray, sql } from 'drizzle-orm'
 
 import { db } from '@/db'
 import { generationImages, generations } from '@/db/schema'
-import { env } from '@/lib/env'
 import type { ContentType } from '@/lib/schemas/content'
 import { offset } from '@/server/lib/pagination'
+import { blobConfigured, blobTokenOption } from '@/server/services/blob'
 
 type ListParams = {
   page: number
@@ -98,9 +98,9 @@ export async function deleteGeneration(userId: string, id: string) {
 
   const images = await listGenerationImages(id)
   const urls = images.map((img) => img.url)
-  if (urls.length && env.BLOB_READ_WRITE_TOKEN) {
+  if (urls.length && blobConfigured) {
     try {
-      await del(urls, { token: env.BLOB_READ_WRITE_TOKEN })
+      await del(urls, blobTokenOption)
     } catch (error) {
       console.error('[generations] failed to delete blob assets:', error)
     }

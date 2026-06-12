@@ -2,9 +2,9 @@ import { put } from '@vercel/blob'
 
 import { db } from '@/db'
 import { generationImages, type Generation } from '@/db/schema'
-import { env } from '@/lib/env'
 import type { ImageStyle } from '@/lib/schemas/image'
 import { ApiError, upstreamError } from '@/server/lib/errors'
+import { blobConfigured, blobTokenOption } from '@/server/services/blob'
 import { IMAGE_MODEL, openai } from '@/server/services/openai'
 import { buildImagePrompt } from '@/server/services/image/prompt'
 
@@ -13,7 +13,7 @@ import { buildImagePrompt } from '@/server/services/image/prompt'
  * image model, stores the bytes in Vercel Blob, and records the row.
  */
 export async function generateGenerationImage(generation: Generation, style: ImageStyle) {
-  if (!env.BLOB_READ_WRITE_TOKEN) {
+  if (!blobConfigured) {
     throw new ApiError(500, 'Image storage is not configured.', 'blob_not_configured')
   }
 
@@ -44,7 +44,7 @@ export async function generateGenerationImage(generation: Generation, style: Ima
   const blob = await put(
     `generations/${generation.id}/${crypto.randomUUID()}.png`,
     Buffer.from(base64, 'base64'),
-    { access: 'public', contentType: 'image/png', token: env.BLOB_READ_WRITE_TOKEN }
+    { access: 'public', contentType: 'image/png', ...blobTokenOption }
   )
 
   const [row] = await db

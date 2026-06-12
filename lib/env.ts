@@ -18,8 +18,11 @@ export const env = createEnv({
     // OpenAI — powers both text generation/improvement and image generation.
     OPENAI_API_KEY: z.string().min(1),
 
-    // Vercel Blob — stores generated images. Required for image generation at runtime.
+    // Vercel Blob — stores generated images.
+    // On Vercel, a connected store provides BLOB_STORE_ID and the SDK uses OIDC
+    // (no token needed). Outside Vercel (local), set BLOB_READ_WRITE_TOKEN instead.
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+    BLOB_STORE_ID: z.string().min(1).optional(),
 
     // Email transport. SMTP wins if set (local Mailpit or any free provider);
     // otherwise Resend; otherwise the OTP is logged to the server console.
@@ -41,6 +44,7 @@ export const env = createEnv({
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    BLOB_STORE_ID: process.env.BLOB_STORE_ID,
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,
     SMTP_USER: process.env.SMTP_USER,
