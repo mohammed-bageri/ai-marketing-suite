@@ -22,9 +22,10 @@ export const improveSchema = z
   .object({
     text: z.string().min(10, 'Add more text to improve').max(6000, 'Text is too long'),
     goal: z.enum(improvementGoals),
-    audience: z.string().min(2).max(120).optional()
+    // Optional and may be empty; the 2-char requirement applies only to rewrite_audience (below).
+    audience: z.string().max(120, 'Audience is too long').optional()
   })
-  .refine((d) => d.goal !== 'rewrite_audience' || Boolean(d.audience), {
+  .refine((d) => d.goal !== 'rewrite_audience' || (d.audience?.trim().length ?? 0) >= 2, {
     message: 'Audience is required when rewriting for a different audience',
     path: ['audience']
   })
