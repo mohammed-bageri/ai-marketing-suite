@@ -58,12 +58,20 @@ docs/
 
 ## Conventions
 
+**Full engineering standards live in [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) — read it before
+implementing.** The essentials:
+
 - **Code style: no semicolons, single quotes, 2-space, 100 cols.** Enforced by Prettier
   (`.prettierrc.json`). Run `npm run format` before committing. Match surrounding style.
 - Path alias `@/*` maps to the **repo root** (not `src/`).
-- New API routes: chain onto the Hono app in `server/` (keep `AppType` accurate for RPC), validate
-  input with Zod, return typed JSON, and handle errors explicitly.
-- Keep all AI/provider logic in `server/services/` — never import OpenAI in a client component.
+- **Layers:** `app/` (routing, thin) → `server/` (Hono routes → services → db) → `features/`
+  (frontend modules). The browser never calls OpenAI/Blob/DB directly.
+- **API:** RESTful Hono routers chained in `server/app.ts` (keep `AppType` accurate). Success returns
+  raw payload (lists use a pagination envelope); errors use `{ error: { message, code? } }`. Validate
+  with `@hono/zod-validator` against schemas in `lib/schemas/` (shared with forms).
+- **Auth:** every owner-scoped query filters by the session user; not-owned → `404`.
+- **Frontend:** Server Components by default; server state via TanStack Query + RPC client; forms via
+  react-hook-form + zod; toasts via sonner; always ship loading/empty/error states.
 - Add DB tables to `db/schema.ts`, then `npm run db:generate && npm run db:migrate`.
 
 ## Commands
